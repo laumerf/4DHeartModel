@@ -1,0 +1,233 @@
+# Data
+data:
+  #----------------- Changing one of the following params results in regeneration of data ----------------------------
+  data_name: CONRADData_DHB
+  # ["aorta", "leftAtrium", "leftVentricle", "myocardium", "rightAtrium", "rightVentricle"]
+  components: ["leftAtrium", "leftVentricle", "myocardium", "rightAtrium", "rightVentricle"]  # Must be in constants.py
+  phases: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # List of values in 0 to 9
+  train_interpolation: 'linear'  #  Can be 'linear' or `spline`
+  test_interpolation: 'linear'
+  modes: # None to use all modes, otherwise list of existing modes for dataset
+  dynamic_modes: # None to use all modes, otherwise list of existing modes for dataset
+  std_shape_generation: [-0.8, 0.8]
+  std_shape_test: [-0.8, 0.8]  # std dev of the generated val/test data
+  time_per_cycle_mean: 0.75
+  time_per_cycle_std: 0.1
+  nb_cycles_mean: 2.5
+  nb_cycles_std: 0.1
+  shift_max: 1.0 # Shift chosen uniformly at random between 0 and this value
+                 # e,g shift_max = 0.7, then shift in [0, 0.7], say shift = 0.5, then the video starts at 0.5 cycles
+                 # (i,e starts in the middle of a cycle)
+  shapes_per_cycle_mean: 10
+  shapes_per_cycle_std: 2
+  pulse_min: 40
+  pulse_max: 200
+  mesh_reduction:  # either None, float between 0 and 1 or integer greater 1 (initial shape reduction)
+  low_efs: True
+  # ------------------------------------------------------------------------------------------------------------------
+
+  save_files: True      # Will save files to disk. Will apply proper scaling
+  tf_record: False
+
+  ds_factors: [8, 4, 4, 4, 4]
+  batch_size: 6  # take care for out of memory exception
+  shuffle_buffer: 1  # no need to use. Dataset is random
+  n_prefetch: -1 # Set to -1 for Autotune
+
+training:
+  # Training
+  n_train_samples: 10000 # leave as is and already existing data is used
+  n_val_samples: 500 # leave as is and already existing data is used
+  n_test_samples: 500
+  num_epochs: 100
+  num_steps: 250 # number of steps before the next validation
+  patience: 5 # nb of consecutive validations, where validation loss doesn't improve from best one found, before decreasing learning rate
+  max_patience: -1 # nb of consecutive validation steps where validation loss doesn't improve from the best one found, before applying early stopping
+  train_plot_freq: 5 # nb of consecutive validations before plotting on (part of) the train set
+  # Loss and LR
+  loss_str: 'l2' # l1 or l2 (others can be implemented)
+  ef_loss_str: 'none'
+  learning_rate: 0.0005
+  decay_rate: 0.98
+  beta_1: 0.9
+  beta_2: 0.99
+
+  # ---------------------------------- not used for the moment ----------------------------------
+  test_frequency: 1 # In terms of epochs
+  regularization: 0.001 # Not used for the moment
+  dropout: 1 # Not used for the moment
+  momentum: 0.9 # Not used for the moment
+
+  # Optimization (not used for the moment)
+  training_mode: 'joint'  # Could be `alternate` or `joint`
+
+  # TODO: alternate each step and not each epoch (not used at the moment)
+  alternate_epochs: 1  # Only if `training_mode=alternate`
+  up_down_fac: 100000  # Only if `training_mode=joint`
+  up_down_decay: 0.9  # Only if `training_mode=joint`
+
+  # up and down error regularization
+  up_down_reg: 0 # 0 means no regularization when computing the down and up errors
+  # ----------------------------------------------------------------------------------------------
+
+model:
+  encoder:
+    conv_layers:
+      - name: GeneralConv
+        channels: 16
+        batch_norm: True
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 16
+        batch_norm: True
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 16
+        batch_norm: True
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 16
+        batch_norm: True
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 32
+        batch_norm: True
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+    lstm_layer:
+        name: lstm # can be lstm or bidir_lstm
+        units: 512 # hidden_dim
+        activation: tanh
+        recurrent_activation: sigmoid
+    lstm_dense_layer:
+      name: dense
+      units: 256
+      activation: linear
+      use_bias: True
+    shape_params_dense_layers:
+      - name: dense
+        units: 128
+        activation: linear
+        use_bias: True
+      - name: dense
+        units: 64
+        activation: linear
+        use_bias: True
+      - name: dense
+        units: 32
+        activation: linear
+        use_bias: True
+      - name: dense
+        units: 16
+        activation: linear
+        use_bias: True
+
+    # if the D matrix should be learned (and how)
+    learn_down: False  # causes memory issue?
+    trainable_down: False  # True smoother reconstruction but can lead to latent vector equal to zero
+
+  decoder:
+    conv_layers:
+      - name: GeneralConv
+        channels: 64
+        batch_norm: False
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 32
+        batch_norm: False
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 32
+        batch_norm: False
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 16
+        batch_norm: False
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: GeneralConv
+        channels: 3
+        batch_norm: False
+        dropout: 0.0
+        aggregate: 'mean'
+        activation: 'prelu'
+        use_bias: True
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+    dense_layer:
+      name: dense
+      activation: relu
+      units:
+      use_bias: True
+
+    # if the U matrix should be learned (and how)
+    learn_up: False # causes memory issue?
+    trainable_up: True  # True smoother reconstruction but can lead to latent vector equal to zero
+
+testing: # used in main.py only
+  # model
+  experiment: 20200518-135626  # provide time string
+  epoch_n: 50

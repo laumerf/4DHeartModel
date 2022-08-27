@@ -1,0 +1,53 @@
+# Experiment name of loaded models for each of the echo AE and mesh AE
+loaded_models:
+  echo:
+    experiment: '20210515-144654'
+    model_nb: 1 # index of the model to be loaded (out of the k models trained, index from 0 to k-1)
+  mesh:
+    experiment: '20211130-170836_stopped'
+  mesh_ef_pred:
+    experiment: '20211202-072611'
+
+training:
+  # Training
+  batch_size: 64 # batch size of the encoded train data
+  patience: 5 # number of validation steps without improvement in validation loss before decaying lr
+  max_patience: 50 # number of validation steps without improvement in validation loss before early stopping
+  decay_rate: 0.99
+
+  num_steps_summaries: 125 # number of steps before logging summaries
+  num_summaries_val: 10 # number of "summary logging steps" before performing a validation step
+
+  max_steps: -1 # maximum number of steps, -1 = infinite
+  
+  optimizer:
+    learning_rate: 0.0001
+    beta_1: 0.9
+    beta_2: 0.99
+
+  loss_str: 'l1'
+
+  # ---------------------------------- not used for the moment ----------------------------------
+  momentum: 0.9
+  # ---------------------------------------------------------------------------------------------
+
+model:
+  dense_layers:
+    - name: dense
+      units: 170
+      activation:
+        name: prelu
+      use_bias: True
+      batch_norm: False
+    - name: dense
+      units: 212
+      activation:
+        name: prelu
+      use_bias: True
+      batch_norm: False
+    - name: dense
+      units: 254 # size of the mesh's shape parameters vector
+      activation:
+        name: linear
+      use_bias: True
+      batch_norm: False

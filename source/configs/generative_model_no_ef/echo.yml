@@ -1,0 +1,18 @@
+data:
+  data_name: EchoDynamics
+  data_dir: '/media/fabian/Extreme SSD/PhD/DATA/ECHO/EchoNet-Dynamic/'
+  # data_dir: '/cluster/work/shfn/laumerf/data/choNet-Dynamic/'
+  n_videos: 1000
+  batch_size: 32
+  shuffle_buffer: 500  # not sure if applied to video or frame
+
+training:
+  patience: 10
+  num_epochs: 50
+  num_steps_per_epoch: 100
+  learning_rate: 0.0005
+
+  test_frequency: 10
+
+model:
+  latent_space_dim: 128

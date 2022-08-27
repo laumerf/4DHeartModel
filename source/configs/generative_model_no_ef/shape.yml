@@ -1,0 +1,153 @@
+# Data
+data:
+  data_name: CONRADData
+  save_files: True      # Will save files to disk. Will apply proper scaling
+  tf_record: False
+  # ["aorta", "leftAtrium", "leftVentricle", "myocardium", "rightAtrium", "rightVentricle"]
+  components: ["aorta", "leftAtrium", "leftVentricle", "rightAtrium", "rightVentricle"]  # Must be in constants.py
+  phases: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # List of values in 0 to 9
+  train_interpolation: 'linear'  #  Can be 'linear' or `spline`
+  test_interpolation: 'spline'
+  fix_time_step:   # If we want to generate data at a fixed time step of the heart cycle for all data shapes, then float 0 <= t < 1
+                   # otherwise None for random time step for each data shape 
+  modes: # None to use all modes, otherwise list of existing modes for dataset
+  dynamic_modes: # None to use all modes, otherwise list of existing modes for dataset
+
+  batch_size: 5  # take care for out of memory exception
+  shuffle_buffer: 1  # no need to use. Dataset is random
+  n_prefetch: -1 # Set to -1 for Autotune
+  std_shape_generation: [-0.5, 0.5]  # minimum/maximum  [-1, 1] seems too large
+  std_shape_test: 0  # Fix float
+  mesh_reduction:  # either None, float between 0 and 1 or integer greater 1 (initial shape reduction)
+  ds_factors: [4, 4, 4, 4]
+
+
+training:
+  # Training
+  n_train_samples: 1000 # leave as is and already existing data is used
+  n_val_samples: 100  # leave as is and already existing data is used
+  num_epochs: 50
+  num_steps_per_epochs: 200
+  test_frequency: 1 # In terms of epochs
+  patience: 10 # nb of consecutive epochs, where validation loss doesn't improve from best one found, before early stopping
+
+  # Loss and LR
+  loss_str: 'l1l2' # l1 or l2 or l1l2 = l2l1 (others can be implemented)
+  regularization: 0.001 # Not used for the moment
+  dropout: 1 # Not used for the moment
+  learning_rate: 0.0005
+  decay_rate: 0.75
+  momentum: 0.9 # Not used for the moment
+
+  # Optimization (not used for the moment)
+  training_mode: 'joint'  # Could be `alternate` or `joint`
+
+  # TODO: alternate each step and not each epoch (not used at the moment)
+  alternate_epochs: 1  # Only if `training_mode=alternate`
+  up_down_fac: 100000  # Only if `training_mode=joint`
+  up_down_decay: 0.9  # Only if `training_mode=joint`
+
+  # up and down error regularization
+  up_down_reg: 0 # 0 means no regularization when computing the down and up errors
+
+model:
+  encoder:
+    conv_layers:
+      - name: ARMAConv  # Most conv of spektral. params must be adapted below
+        channels: 16
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+      - name: ARMAConv
+        channels: 16
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+      - name: ARMAConv
+        channels: 16
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+      - name: ARMAConv
+        channels: 32
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+    dense_layer:
+      name: dense
+      units: 20 # Latent dim
+      activation: relu
+      use_bias: True
+
+    # if the D matrix should be learned (and how)
+    learn_down: False  # causes memory issue?
+    trainable_down: False  # True smoother reconstruction but can lead to latent vector equal to zero
+
+  decoder:
+    conv_layers:
+      - name: ARMAConv
+        channels: 32
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+      - name: ARMAConv
+        channels: 16
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+      - name: ARMAConv
+        channels: 16
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+      - name: ARMAConv
+        channels: 3
+        order: 1
+        activation: relu
+        kernel_regularizer:
+          class_name: l1   # Could be l1, l2, or L1L2
+          config:
+            l: 0.0005
+        use_bias: True
+    dense_layer:
+      units:  # None will imply to be computed based on encoder
+      name: dense
+      activation: relu
+      use_bias: True
+
+    # if the U matrix should be learned (and how)
+    learn_up: False # causes memory issue?
+    trainable_up: True  # True smoother reconstruction but can lead to latent vector equal to zero
+
+testing: # used in main.py only
+  # model
+  experiment: 20200518-135626  # provide time string
+  epoch_n: 50

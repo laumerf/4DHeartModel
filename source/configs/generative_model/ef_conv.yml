@@ -1,0 +1,34 @@
+data_ef: # echo data config
+  batch_size: 32
+  experiment: '20210615-062308'
+
+training:
+  num_epochs: 900
+  num_steps: 125 # number of steps before the next validation
+
+  optimizer:
+    learning_rate: 0.0001
+    beta_1: 0.9
+    beta_2: 0.99
+  
+  patience: 20 # number of validation steps without improvement in validation loss before decaying lr
+  decay_rate: 0.99
+  
+
+  # ---------------------------------- not used for the moment ----------------------------------
+  momentum: 0.9
+  # ---------------------------------------------------------------------------------------------
+
+model:
+  dense_layers:
+    - name: dense
+      units: 32
+      activation:
+        name: prelu
+      use_bias: True
+    - name: dense
+      units: 1
+      activation:
+        name: sigmoid
+      use_bias: True
+

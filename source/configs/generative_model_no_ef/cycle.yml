@@ -1,0 +1,225 @@
+# Experiment name of loaded models for each of the echo AE and mesh AE
+loaded_models:
+  echo:
+    experiment:
+    model_nb: 0 # index of the model to be loaded (out of the k models trained, index from 0 to k-1)
+  mesh:
+    #experiment: 20220523-102017 # without low EF videos 
+    experiment: 20220530-115348 # with low EF videos
+  mesh_ef_pred:
+    experiment:
+      
+  # only used if args.run_exps is set
+  gm:
+    #experiment: 20220525-190604  # with EF loss
+    experiment: 20220601-145116_good_run # without EF loss
+
+# Data
+data_echo: # echo data config
+  batch_size: 256 # batch size of the encoded train data
+
+  # shuffle_buffer: 1 # not used, data shuffled with numpy
+  # n_prefetch: -1 # Set to -1 for Autotune
+
+data_mesh: # mesh data config
+  batch_size: 256 # batch size of the encoded train data
+
+training:
+  # Training
+  patience: 4 # number of validation steps without improvement in validation loss before decaying lr
+  max_patience: 50 # number of validation steps without improvement in validation loss before early stopping
+  decay_rate: 0.99
+  
+  num_steps_alternate_train: 2 # number of steps before alternating the training (train Gs only -> train Ds only -> train Gs only -> ...)
+  num_steps_summaries: 125 # number of steps before logging train summaries
+  num_steps_val: 50 # # number of steps before performing a validation step
+  step_disc_train_start: 10000 # step number for starting to train disc and starting to use adversarial loss
+
+  max_steps: 100000 # maximum number of steps, -1 = infinite
+
+  optimizers:
+    mesh_gen:
+      learning_rate: 0.0002
+      beta_1: 0.5
+      beta_2: 0.99
+    echo_gen:
+      learning_rate: 0.0002
+      beta_1: 0.5
+      beta_2: 0.99
+    mesh_disc:
+      learning_rate: 0.0002
+      beta_1: 0.5
+      beta_2: 0.99
+    echo_disc:
+      learning_rate: 0.0002
+      beta_1: 0.5
+      beta_2: 0.99
+    echo_ae:
+      learning_rate: 0.0002
+      beta_1: 0.5
+      beta_2: 0.99
+  
+  cycle_loss_lambda: 1
+  cycle_loss_str: 'l1'
+  ef_loss_lambda: 0
+  ef_loss_str: 'l1'
+  echo_rec_loss_str: 'l2'
+
+  # ---------------------------------- not used for the moment ----------------------------------
+  momentum: 0.9
+  # ---------------------------------------------------------------------------------------------
+
+model:
+  mesh_gen: # mesh (latent) generator
+    dense_layers:
+      - name: dense1
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 512
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense2
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 1024
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense3
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 2048
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense4
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 1024
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense5
+        activation:
+          name: linear
+          alpha: 0.2
+        units: 16 # size of the mesh's shape parameters vector
+        use_bias: True
+        batch_norm: False
+
+  echo_gen: # echo (latent) generator
+    dense_layers:
+      - name: dense1
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 512
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense2
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 1024
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense3
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 2048
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense4
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 1024
+        use_bias: True
+        batch_norm: False
+        kernel_regularizer:
+          class_name: l2   # Could be l1 or l2
+          config:
+            l: 0.0005
+      - name: dense5
+        activation:
+          name: linear
+          alpha: 0.2
+        units: 126 # size of the echo's shape parameters vector
+        use_bias: True
+        batch_norm: False
+        
+  echo_disc: # discriminator classifying echos
+    dense_layers:
+      - name: dense1
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 512
+        use_bias: True
+        batch_norm: False
+      - name: dense2
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 1024
+        use_bias: True
+        batch_norm: False
+      - name: dense3
+        activation:
+          name: linear # linear to get values in range [-inf, inf] of logits
+        units: 1 # logit, sigmoid(logit) = softmax(logit) = probability of being real
+        use_bias: True
+        batch_norm: False
+
+  mesh_disc: # discriminator classifying meshes as real or fake
+    dense_layers:
+      - name: dense1
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 512
+        use_bias: True
+        batch_norm: False
+      - name: dense2
+        activation:
+          name: leakyrelu
+          alpha: 0.2
+        units: 1024
+        use_bias: True
+        batch_norm: False
+      - name: dense3
+        activation:
+          name: linear # linear to get values in range [-inf, inf] of logits
+        units: 1 # logit, sigmoid(logit) = softmax(logit) = probability of being real
+        use_bias: True
+        batch_norm: False
