@@ -63,3 +63,13 @@ Under "ef_data" one can find the ejection fraction (EF) correlation plots betwee
 - EF_Vol_scatter: Echo EF vs. EF from predicted mesh calculated from the volumes directly
 - EF_Mesh_scatter:  EF from predicted mesh calculated with biplane vs. EF predictions from mesh latents
 - EF_Pred_scatter: Echo EF vs. EF predictions from mesh latents
+  
+  If this repository was helpful for your research please consider citing:
+  @article{laumer2022weakly,
+  title={Weakly supervised inference of personalized heart meshes based on echocardiography videos},
+  author={Laumer, Fabian and Amrani, Mounir and Manduchi, Laura and Beuret, Ami and Rubi, Lena and Dubatovka, Alina and Matter, Christian M and Buhmann, Joachim M},
+  journal={Medical Image Analysis},
+  pages={102653},
+  year={2022},
+  publisher={Elsevier}
+}
