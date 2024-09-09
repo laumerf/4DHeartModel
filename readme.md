@@ -1,8 +1,7 @@
 # Weakly supervised inference of personalized heart meshes based on echocardiography videos
 ![2D to 3D Model](media/overview.png)
 
-This is the official repository of the paper: "Weakly supervised inference of personalized heart meshes based on echocardiography
-videos."
+This is the official repository of the paper [Weakly supervised inference of personalized heart meshes based on echocardiography videos](https://www.sciencedirect.com/science/article/pii/S136184152200281X)
 
 ## Requirements
 This code is tested on Tensorflow 2.7. Requirements (including tensorflow) can be installed using:
